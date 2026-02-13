@@ -5,50 +5,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>주보 종합 상황판</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css'); body { font-family: 'Pretendard', sans-serif; }</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
+    </style>
 </head>
-<body class="bg-slate-100 p-6">
-    <div class="max-w-5xl mx-auto">
-        <header class="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow">
-            <h1 class="text-xl font-bold">📋 주보 접수 현황</h1>
-            <input type="date" id="filterDate" class="p-2 border rounded font-bold text-slate-700">
+<body class="bg-slate-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <a href="./index.html" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-3 rounded-2xl font-bold transition flex items-center gap-2 text-sm whitespace-nowrap">
+                    <i class="fas fa-pencil-alt"></i> 작성하기
+                </a>
+                <h1 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    📋 접수 현황
+                </h1>
+            </div>
+            
+            <div class="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100 w-full md:w-auto">
+                <i class="far fa-calendar-alt text-indigo-600"></i>
+                <input type="date" id="filterDate" class="bg-transparent font-bold text-indigo-900 focus:outline-none cursor-pointer w-full md:w-auto p-1">
+            </div>
         </header>
-        <div id="content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+        <div id="loading" class="text-center py-20">
+            <i class="fas fa-circle-notch fa-spin text-4xl text-indigo-500 mb-4"></i>
+            <p class="text-slate-500">데이터를 불러오고 있습니다...</p>
+        </div>
+
+        <div id="noData" class="hidden flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-300">
+            <i class="far fa-folder-open text-5xl text-slate-300 mb-4"></i>
+            <p class="text-slate-500 font-medium">아직 접수된 내용이 없습니다.</p>
+        </div>
+
+        <div id="contentArea" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
+
     <script>
-        // ⚠️ 여기에 아까 복사한 구글 앱스 스크립트 URL을 붙여넣으세요!
+        // ⚠️ [수정필수] 여기도 구글 스크립트 URL 꼭 넣어주세요!
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxAItLf7sBsBhX-VIcTWruv1ukt8XSR-qNMy_GesNUhPQQFvDkCoztFQqDVNSrXrYuu/exec'; 
 
-        const today = new Date(); const nextSun = new Date(today.setDate(today.getDate() + (7 - today.getDay()) % 7 || 7));
+        const today = new Date(); 
+        const nextSun = new Date(today.setDate(today.getDate() + (7 - today.getDay()) % 7 || 7));
         document.getElementById('filterDate').value = nextSun.toISOString().split('T')[0];
         
-        fetch(SCRIPT_URL).then(res => res.json()).then(data => {
+        // 데이터 불러오기
+        fetch(SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
             const render = () => {
                 const date = document.getElementById('filterDate').value;
-                const filtered = data.filter(i => i.date.startsWith(date));
-                const div = document.getElementById('content'); div.innerHTML = '';
+                const container = document.getElementById('contentArea');
+                const loading = document.getElementById('loading');
+                const noData = document.getElementById('noData');
                 
-                if(!filtered.length) div.innerHTML = '<p class="col-span-3 text-center text-gray-400 py-10">데이터가 없습니다.</p>';
+                loading.classList.add('hidden');
+                container.innerHTML = '';
+                
+                // 날짜 필터링 (구글시트 날짜 앞 10자리 비교)
+                const filtered = data.filter(i => i.date.substring(0, 10) === date);
+
+                if(!filtered.length) {
+                    noData.classList.remove('hidden');
+                    container.classList.add('hidden');
+                    return;
+                }
+
+                noData.classList.add('hidden');
+                container.classList.remove('hidden');
                 
                 filtered.forEach(item => {
-                    // 복사될 텍스트 형식 만들기
-                    let copyText = "";
-                    if (item.department.includes('설교')) {
-                        copyText = `[${item.department}]\n제목: ${item.field2}\n본문: ${item.field1}`;
-                    } else {
-                        // 찬양대, 광고 등은 내용 합치기
-                        copyText = `${item.department}\n${item.field1 ? item.field1 + ' ' : ''}${item.longText}`.trim();
-                    }
+                    // 디자인 테마 설정
+                    let theme = { border: 'border-l-indigo-500', icon: '📝', bg: 'bg-indigo-50', text: 'text-indigo-700' };
+                    if(item.department.includes('설교')) theme = { border: 'border-l-blue-500', icon: '📖', bg: 'bg-blue-50', text: 'text-blue-700' };
+                    else if(item.department.includes('찬양')) theme = { border: 'border-l-emerald-500', icon: '🎵', bg: 'bg-emerald-50', text: 'text-emerald-700' };
+                    else if(item.department.includes('학교')) theme = { border: 'border-l-pink-500', icon: '🏫', bg: 'bg-pink-50', text: 'text-pink-700' };
+                    else if(item.department.includes('광고')) theme = { border: 'border-l-orange-500', icon: '📢', bg: 'bg-orange-50', text: 'text-orange-700' };
 
-                    div.innerHTML += `
-                        <div class="bg-white p-5 rounded-xl shadow border-l-4 ${item.department.includes('설교')?'border-blue-500':item.department.includes('찬양')?'border-green-500':'border-orange-500'}">
-                            <div class="flex justify-between font-bold mb-2"><span>${item.department}</span><span class="text-xs text-gray-400 font-normal">${item.writer}</span></div>
-                            <div class="text-sm text-gray-700 space-y-1 mb-4">
-                                ${item.field1 ? `<p class="font-semibold text-indigo-600">📌 ${item.field1}</p>` : ''} 
-                                ${item.field2 ? `<p class="font-bold text-lg">📢 ${item.field2}</p>` : ''}
-                                ${item.longText ? `<p class="whitespace-pre-wrap bg-gray-50 p-2 rounded mt-2">${item.longText}</p>` : ''}
+                    // 복사 텍스트 포맷팅
+                    let copyText = "";
+                    if(item.department.includes('설교')) copyText = `[${item.department}]\n제목: ${item.field2}\n본문: ${item.field1}`;
+                    else copyText = `${item.department}\n${item.field1 ? item.field1 + ' ' : ''}${item.longText}`.trim();
+
+                    container.innerHTML += `
+                        <div class="card-hover bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col transition-all duration-300">
+                            <div class="px-6 py-4 border-b border-slate-50 flex justify-between items-center ${theme.bg}">
+                                <span class="font-bold text-lg flex items-center gap-2 ${theme.text}">${theme.icon} ${item.department}</span>
+                                <span class="text-xs bg-white/80 px-2 py-1 rounded-lg text-slate-500 font-medium">${item.writer}</span>
                             </div>
-                            <button onclick="navigator.clipboard.writeText(\`${copyText.replace(/`/g, '')}\`).then(()=>alert('복사됨!'))" class="w-full py-2 bg-gray-100 hover:bg-indigo-100 text-indigo-700 font-bold rounded text-sm">복사하기</button>
+                            
+                            <div class="p-6 flex-grow space-y-3">
+                                ${item.field1 ? `<div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><span class="text-xs text-slate-400 block mb-1">분류/본문</span><p class="font-semibold text-slate-700">${item.field1}</p></div>` : ''}
+                                ${item.field2 ? `<div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><span class="text-xs text-slate-400 block mb-1">제목</span><p class="font-bold text-lg text-slate-800">${item.field2}</p></div>` : ''}
+                                ${item.longText ? `<div class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">${item.longText}</div>` : ''}
+                            </div>
+
+                            <div class="p-4 bg-slate-50/50 mt-auto">
+                                <button onclick="navigator.clipboard.writeText(\`${copyText.replace(/`/g, '')}\`).then(()=>alert('클립보드에 복사되었습니다! ✨'))" 
+                                    class="w-full py-3 bg-white border border-slate-200 hover:border-indigo-500 hover:text-indigo-600 text-slate-600 font-bold rounded-xl shadow-sm transition-all duration-200 flex items-center justify-center gap-2 group">
+                                    <i class="far fa-copy group-hover:scale-110 transition-transform"></i> 내용 복사하기
+                                </button>
+                            </div>
                         </div>`;
                 });
             };
