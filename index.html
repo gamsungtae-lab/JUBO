@@ -13,24 +13,22 @@
             font-family: 'Pretendard', sans-serif; 
             background-color: #F2F4F6; 
             color: #191F28;
-            -webkit-tap-highlight-color: transparent; /* 모바일 터치 하이라이트 제거 */
+            -webkit-tap-highlight-color: transparent;
         }
         
-        /* 토스 스타일 카드 */
         .toss-card {
             background: white;
             border-radius: 24px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
         }
         
-        /* 입력창 디자인 (터치 영역 확대) */
         .toss-input {
             background-color: #F9FAFB;
             border: 1px solid transparent;
             border-radius: 16px;
             transition: all 0.2s ease;
             color: #333D4B;
-            appearance: none; /* 기본 스타일 제거 */
+            appearance: none; 
             -webkit-appearance: none;
             cursor: pointer;
         }
@@ -41,7 +39,6 @@
             outline: none;
         }
         
-        /* 버튼 디자인 */
         .toss-btn {
             background-color: #3182F6;
             color: white;
@@ -50,18 +47,16 @@
         }
         .toss-btn:active { background-color: #1B64DA; transform: scale(0.98); }
 
-        /* 셀렉트 박스 화살표 커스텀 */
         .select-wrapper { position: relative; }
         .select-icon {
             position: absolute;
             right: 16px;
             top: 50%;
             transform: translateY(-50%);
-            pointer-events: none; /* 아이콘이 클릭 막지 않도록 설정 */
+            pointer-events: none;
             color: #8B95A1;
         }
 
-        /* 전체보기 창 애니메이션 */
         .modal-bg { transition: opacity 0.3s ease; }
         .modal-content { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     </style>
@@ -113,9 +108,9 @@
                                 <option value="school">교회학교</option>
                             </optgroup>
 
-                            <optgroup label="📢 기타">
-                                <option value="news">광고 / 소식</option>
-                                <option value="service">봉사 / 기타</option>
+                            <optgroup label="📢 기타 / 교우소식">
+                                <option value="news">광고 / 일반소식</option>
+                                <option value="fellowship">교우소식 (장례/결혼/출산)</option> <option value="service">봉사 / 기타</option>
                             </optgroup>
                         </select>
                         <div class="select-icon"><i class="fas fa-chevron-down"></i></div>
@@ -139,16 +134,13 @@
 
     <div id="viewModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center">
         <div id="modalBackdrop" class="absolute inset-0 bg-black/40 opacity-0 modal-bg" onclick="closeModal()"></div>
-        
         <div id="modalContent" class="relative bg-[#F2F4F6] w-full max-w-lg h-[90vh] sm:h-[80vh] rounded-t-[28px] sm:rounded-[28px] shadow-2xl flex flex-col overflow-hidden transform translate-y-full modal-content">
-            
             <div class="bg-white p-5 flex justify-between items-center border-b border-gray-100 rounded-t-[28px]">
                 <h2 class="text-xl font-bold text-[#191F28] pl-2">접수 현황</h2>
                 <button onclick="closeModal()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            
             <div id="viewContent" class="flex-1 overflow-y-auto p-5 space-y-4">
                 <div class="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
                     <i class="fas fa-spinner fa-spin text-2xl text-[#3182F6]"></i>
@@ -161,15 +153,14 @@
 </div>
 
 <script>
-    // 🔴 [필수] 구글 스크립트 URL 다시 확인해서 넣어주세요!
+    // 🔴 [필수] 구글 스크립트 URL을 여기에 넣어주세요!
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxAItLf7sBsBhX-VIcTWruv1ukt8XSR-qNMy_GesNUhPQQFvDkCoztFQqDVNSrXrYuu/exec'; 
 
-    // 날짜 자동 설정
     const today = new Date(); 
     const nextSun = new Date(today.setDate(today.getDate() + (7 - today.getDay()) % 7 || 7));
     document.getElementById('targetDate').valueAsDate = nextSun;
 
-    // 1. 입력창 로직 (청년/교회학교 입력 간소화 적용됨)
+    // 1. 입력창 로직
     function updateFormFields() {
         const dept = document.getElementById('department').value;
         const div = document.getElementById('dynamicFields');
@@ -180,21 +171,41 @@
 
         let html = '';
 
-        if (dept === 'school' || dept === 'youth') {
+        // Case A: 교우소식 (장례/결혼/출산) - 요청하신 기능!
+        if (dept === 'fellowship') {
+            html = `
+                <div>
+                    <h3 class="text-lg font-bold text-[#3182F6] mb-2">교우소식 입력</h3>
+                    <div class="select-wrapper mb-3">
+                        <select id="field1" class="toss-input w-full p-4 font-bold">
+                            <option value="장례">⚫ 장례 (소천)</option>
+                            <option value="결혼">💍 결혼</option>
+                            <option value="출산">👶 출산</option>
+                            <option value="입원">🏥 입원/기타</option>
+                        </select>
+                        <div class="select-icon"><i class="fas fa-chevron-down"></i></div>
+                    </div>
+                    <textarea id="longText" rows="5" class="toss-input w-full p-4 resize-none" placeholder="내용을 입력해주세요.&#13;&#10;(예: 000 성도 부친상, 장례식장, 발인일시 등)"></textarea>
+                </div>`;
+        }
+        // Case B: 청년부/교회학교
+        else if (dept === 'school' || dept === 'youth') {
             const label = dept === 'youth' ? '청년부' : '교회학교';
             html = `
                 <div>
                     <h3 class="text-lg font-bold text-[#3182F6] mb-1">${label} 소식</h3>
-                    <p class="text-xs text-gray-400 mb-3">부서명 없이 내용만 적으세요</p>
+                    <p class="text-xs text-gray-400 mb-3">내용만 자유롭게 적어주세요</p>
                     <textarea id="longText" rows="6" class="toss-input w-full p-4 resize-none" placeholder="광고 내용, 모임 장소 등을 적어주세요."></textarea>
                 </div>`;
         }
+        // Case C: 설교
         else if (dept.includes('sermon')) {
             html = `
                 <h3 class="text-lg font-bold text-[#191F28] mb-3">설교 정보</h3>
                 <input id="field1" class="toss-input w-full p-4 mb-3" placeholder="성경 본문 (예: 요 3:16)">
                 <input id="field2" class="toss-input w-full p-4" placeholder="설교 제목">`;
         }
+        // Case D: 찬양
         else if (dept.includes('worship') || dept === 'choir_all') {
             let ph = "곡명을 입력해주세요.";
             if (dept === 'choir_all') ph = "예시:\n1부: 곡명\n2부: 곡명\n3부: 곡명";
@@ -202,9 +213,10 @@
                 <h3 class="text-lg font-bold text-[#191F28] mb-3">찬양 콘티</h3>
                 <textarea id="longText" rows="6" class="toss-input w-full p-4 resize-none" placeholder="${ph}"></textarea>`;
         }
+        // Case E: 일반 광고/봉사
         else {
             let sub = dept === 'news' 
-                ? `<select id="field1" class="toss-input w-full p-4 mb-3"><option>교회소식</option><option>기관소식</option><option>모집</option></select>` 
+                ? `<div class="select-wrapper mb-3"><select id="field1" class="toss-input w-full p-4"><option>교회소식</option><option>기관소식</option><option>모집</option></select><div class="select-icon"><i class="fas fa-chevron-down"></i></div></div>` 
                 : `<input id="field1" class="toss-input w-full p-4 mb-3" placeholder="봉사/부서명">`;
             html = `${sub}<textarea id="longText" rows="5" class="toss-input w-full p-4 resize-none" placeholder="내용 입력"></textarea>`;
         }
@@ -233,14 +245,13 @@
         });
     });
 
-    // 3. 모달 열기/닫기 로직 (간섭 문제 완벽 해결)
+    // 3. 모달 로직 (클릭 간섭 없음)
     function openModal() {
         const modal = document.getElementById('viewModal');
         const backdrop = document.getElementById('modalBackdrop');
         const content = document.getElementById('modalContent');
         
-        modal.classList.remove('hidden'); // display:block으로 변경
-        // 애니메이션을 위해 약간의 딜레이 후 클래스 추가
+        modal.classList.remove('hidden');
         setTimeout(() => {
             backdrop.classList.remove('opacity-0');
             content.classList.remove('translate-y-full');
@@ -256,11 +267,7 @@
         
         backdrop.classList.add('opacity-0');
         content.classList.add('translate-y-full');
-        
-        // 애니메이션 끝난 후 숨김 처리
-        setTimeout(() => {
-            modal.classList.add('hidden');
-        }, 300);
+        setTimeout(() => { modal.classList.add('hidden'); }, 300);
     }
 
     // 데이터 불러오기
