@@ -110,7 +110,8 @@
 
                             <optgroup label="📢 기타 / 교우소식">
                                 <option value="news">광고 / 일반소식</option>
-                                <option value="fellowship">교우소식 (장례/결혼/출산)</option> <option value="service">봉사 / 기타</option>
+                                <option value="fellowship">교우소식 (장례/결혼/출산)</option>
+                                <option value="service">봉사 / 기타</option>
                             </optgroup>
                         </select>
                         <div class="select-icon"><i class="fas fa-chevron-down"></i></div>
@@ -135,12 +136,20 @@
     <div id="viewModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center">
         <div id="modalBackdrop" class="absolute inset-0 bg-black/40 opacity-0 modal-bg" onclick="closeModal()"></div>
         <div id="modalContent" class="relative bg-[#F2F4F6] w-full max-w-lg h-[90vh] sm:h-[80vh] rounded-t-[28px] sm:rounded-[28px] shadow-2xl flex flex-col overflow-hidden transform translate-y-full modal-content">
-            <div class="bg-white p-5 flex justify-between items-center border-b border-gray-100 rounded-t-[28px]">
-                <h2 class="text-xl font-bold text-[#191F28] pl-2">접수 현황</h2>
-                <button onclick="closeModal()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
+            
+            <div class="bg-white p-5 border-b border-gray-100 rounded-t-[28px] z-20">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xl font-bold text-[#191F28] pl-1">접수 현황</h2>
+                    <button onclick="closeModal()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200">
+                    <span class="text-xs font-bold text-gray-500 pl-2">조회 날짜:</span>
+                    <input type="date" id="modalDateInput" class="bg-transparent font-bold text-[#3182F6] flex-1 outline-none" onchange="fetchData()">
+                </div>
             </div>
+            
             <div id="viewContent" class="flex-1 overflow-y-auto p-5 space-y-4">
                 <div class="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
                     <i class="fas fa-spinner fa-spin text-2xl text-[#3182F6]"></i>
@@ -153,12 +162,15 @@
 </div>
 
 <script>
-    // 🔴 [필수] 구글 스크립트 URL을 여기에 넣어주세요!
+    // 🔴 [필수] 구글 스크립트 URL을 꼭 넣어주세요!
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxAItLf7sBsBhX-VIcTWruv1ukt8XSR-qNMy_GesNUhPQQFvDkCoztFQqDVNSrXrYuu/exec'; 
 
+    // 날짜 자동 설정
     const today = new Date(); 
     const nextSun = new Date(today.setDate(today.getDate() + (7 - today.getDay()) % 7 || 7));
-    document.getElementById('targetDate').valueAsDate = nextSun;
+    const nextSunString = nextSun.toISOString().split('T')[0];
+    
+    document.getElementById('targetDate').value = nextSunString;
 
     // 1. 입력창 로직
     function updateFormFields() {
@@ -171,7 +183,7 @@
 
         let html = '';
 
-        // Case A: 교우소식 (장례/결혼/출산) - 요청하신 기능!
+        // Case A: 교우소식
         if (dept === 'fellowship') {
             html = `
                 <div>
@@ -185,7 +197,7 @@
                         </select>
                         <div class="select-icon"><i class="fas fa-chevron-down"></i></div>
                     </div>
-                    <textarea id="longText" rows="5" class="toss-input w-full p-4 resize-none" placeholder="내용을 입력해주세요.&#13;&#10;(예: 000 성도 부친상, 장례식장, 발인일시 등)"></textarea>
+                    <textarea id="longText" rows="5" class="toss-input w-full p-4 resize-none" placeholder="내용을 입력해주세요.&#13;&#10;(예: 000 성도 부친상, 장례식장 등)"></textarea>
                 </div>`;
         }
         // Case B: 청년부/교회학교
@@ -245,19 +257,26 @@
         });
     });
 
-    // 3. 모달 로직 (클릭 간섭 없음)
+    // 3. 모달 로직
+    let allDataCache = []; // 데이터를 한번 가져오면 저장해두는 변수
+
     function openModal() {
         const modal = document.getElementById('viewModal');
         const backdrop = document.getElementById('modalBackdrop');
         const content = document.getElementById('modalContent');
+        const modalDateInput = document.getElementById('modalDateInput');
         
+        // 메인 화면의 날짜를 모달 날짜 기본값으로 설정
+        const mainDate = document.getElementById('targetDate').value;
+        modalDateInput.value = mainDate;
+
         modal.classList.remove('hidden');
         setTimeout(() => {
             backdrop.classList.remove('opacity-0');
             content.classList.remove('translate-y-full');
         }, 10);
         
-        fetchData();
+        fetchData(); // 데이터 불러오기
     }
 
     function closeModal() {
@@ -270,43 +289,75 @@
         setTimeout(() => { modal.classList.add('hidden'); }, 300);
     }
 
-    // 데이터 불러오기
+    // 4. 데이터 불러오기 & 필터링 (업그레이드 됨!)
     function fetchData() {
         const container = document.getElementById('viewContent');
-        const date = document.getElementById('targetDate').value;
+        // ⭐ 모달 안에 있는 날짜 입력칸의 값을 가져옵니다!
+        const filterDate = document.getElementById('modalDateInput').value; 
         
+        container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 gap-3"><i class="fas fa-spinner fa-spin text-2xl text-[#3182F6]"></i><p>데이터 확인 중...</p></div>`;
+
+        // 데이터를 이미 가져왔다면 다시 요청하지 않고 필터링만 함 (속도 향상)
+        if (allDataCache.length > 0) {
+            renderList(allDataCache, filterDate);
+            return;
+        }
+
         fetch(SCRIPT_URL)
         .then(res => res.json())
         .then(data => {
-            const filtered = data.filter(i => i.date.startsWith(date));
-            container.innerHTML = '';
-            
-            if (!filtered.length) {
-                container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-gray-400 gap-3"><i class="far fa-folder-open text-4xl mb-2"></i><p>접수된 내용이 없습니다.</p></div>`;
-                return;
+            allDataCache = data; // 가져온 데이터 저장
+            renderList(data, filterDate);
+        });
+    }
+
+    // 리스트 그리기 함수 (분리됨)
+    function renderList(data, date) {
+        const container = document.getElementById('viewContent');
+        // 날짜 필터링
+        const filtered = data.filter(i => i.date.startsWith(date));
+        
+        container.innerHTML = '';
+        
+        if (!filtered.length) {
+            container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-gray-400 gap-3"><i class="far fa-folder-open text-4xl mb-2"></i><p>${date}<br>접수된 내용이 없습니다.</p></div>`;
+            return;
+        }
+
+        filtered.forEach(item => {
+            let copyText = "";
+            let badgeColor = "bg-gray-100 text-gray-500";
+            let deptLabel = item.department;
+
+            // 교우소식인 경우 뱃지 색상 변경
+            if(item.department === 'fellowship') {
+                deptLabel = '교우소식';
+                badgeColor = "bg-purple-100 text-purple-600";
+                copyText = `[교우소식] ${item.field1}\n${item.longText}`.trim();
+            }
+            else if(item.department.includes('설교')) {
+                badgeColor = "bg-blue-100 text-blue-600";
+                copyText = `[${item.department}]\n제목: ${item.field2}\n본문: ${item.field1}`;
+            } 
+            else {
+                copyText = `${item.department}\n${item.field1 ? item.field1+' ' : ''}${item.longText}`.trim();
             }
 
-            filtered.forEach(item => {
-                let copyText = "";
-                if(item.department.includes('설교')) copyText = `[${item.department}]\n제목: ${item.field2}\n본문: ${item.field1}`;
-                else copyText = `${item.department}\n${item.field1 ? item.field1+' ' : ''}${item.longText}`.trim();
-
-                container.innerHTML += `
-                    <div class="bg-white p-5 rounded-[20px] shadow-sm mb-4">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="font-bold text-[#191F28] text-lg">${item.department}</span>
-                            <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-md font-medium">${item.writer}</span>
-                        </div>
-                        <div class="text-[#4E5968] text-sm space-y-2 mb-4">
-                            ${item.field1 ? `<p class="font-semibold text-[#3182F6]">${item.field1}</p>` : ''}
-                            ${item.field2 ? `<p class="font-bold text-black text-base">${item.field2}</p>` : ''}
-                            ${item.longText ? `<p class="whitespace-pre-wrap bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">${item.longText}</p>` : ''}
-                        </div>
-                        <button onclick="navigator.clipboard.writeText(\`${copyText.replace(/`/g, '')}\`).then(()=>alert('복사되었습니다!'))" class="w-full py-3 bg-[#F2F4F6] text-[#4E5968] font-bold rounded-xl text-sm hover:bg-[#E5E8EB] transition">
-                            복사하기
-                        </button>
-                    </div>`;
-            });
+            container.innerHTML += `
+                <div class="bg-white p-5 rounded-[20px] shadow-sm mb-4 border border-gray-50">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="font-bold text-[#191F28] text-lg">${deptLabel}</span>
+                        <span class="text-xs ${badgeColor} px-2 py-1 rounded-md font-bold">${item.writer}</span>
+                    </div>
+                    <div class="text-[#4E5968] text-sm space-y-2 mb-4">
+                        ${item.field1 ? `<p class="font-bold text-[#3182F6] text-base">${item.field1}</p>` : ''}
+                        ${item.field2 ? `<p class="font-bold text-black text-lg">${item.field2}</p>` : ''}
+                        ${item.longText ? `<p class="whitespace-pre-wrap bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">${item.longText}</p>` : ''}
+                    </div>
+                    <button onclick="navigator.clipboard.writeText(\`${copyText.replace(/`/g, '')}\`).then(()=>alert('복사되었습니다!'))" class="w-full py-3 bg-[#F2F4F6] text-[#4E5968] font-bold rounded-xl text-sm hover:bg-[#E5E8EB] transition flex justify-center items-center gap-2">
+                        <i class="far fa-copy"></i> 복사하기
+                    </button>
+                </div>`;
         });
     }
 </script>
