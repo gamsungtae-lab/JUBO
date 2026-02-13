@@ -3,94 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>주보 입력 시스템</title>
+    <title>주보 컨텐츠 작성</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css'); body { font-family: 'Pretendard', sans-serif; }</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; }
+        .glass-effect { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .input-field { transition: all 0.3s ease; }
+        .input-field:focus { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); border-color: #6366f1; }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
-    <div class="w-full max-w-lg bg-white rounded-xl shadow-lg p-6">
-        <h1 class="text-2xl font-bold text-center text-indigo-700 mb-6">⛪ 주보 내용 입력</h1>
-        <form id="juboForm" class="space-y-4">
-            <div><label class="block text-sm font-bold text-gray-700">📅 주보 날짜</label><input type="date" id="targetDate" class="w-full p-3 border rounded-lg" required></div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700">🏷️ 부서 선택</label>
-                <select id="department" class="w-full p-3 border rounded-lg" onchange="updateFormFields()">
-                    <option value="">선택하세요</option>
-                    <optgroup label="찬양">
-                        <option value="worship_1">1부 경배와찬양</option>
-                        <option value="worship_23">2-3부 경배와찬양</option>
-                        <option value="choir_all">찬양대 (전체 통합)</option>
-                    </optgroup>
-                    <optgroup label="설교 (제목/본문)">
-                        <option value="sermon_4">4부 설교</option>
-                        <option value="sermon_5">5부 설교</option>
-                        <option value="sermon_pm">오후예배 설교</option>
-                        <option value="sermon_wed_am">수요오전 설교</option>
-                        <option value="sermon_wed_pm">수요저녁 설교</option>
-                    </optgroup>
-                    <optgroup label="기타">
-                        <option value="school">교회학교/청년부</option>
-                        <option value="news">광고/소식</option>
-                        <option value="service">봉사/기타</option>
-                    </optgroup>
-                </select>
-            </div>
-            <div><label class="block text-sm font-bold text-gray-700">✍️ 작성자</label><input type="text" id="writer" class="w-full p-3 border rounded-lg" placeholder="직분 포함" required></div>
-            
-            <div id="dynamicFields" class="hidden space-y-3 bg-gray-50 p-4 rounded-lg border"></div>
+<body class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen flex items-center justify-center p-4 md:p-6">
 
-            <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-lg hover:bg-indigo-700">제출하기</button>
+    <div class="w-full max-w-xl glass-effect rounded-3xl shadow-2xl overflow-hidden border border-white/50 relative">
+        
+        <div class="bg-indigo-600 p-6 flex justify-between items-center text-white">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">⛪ 주보 작성</h1>
+                <p class="text-indigo-200 text-xs mt-1">이번 주 주보 내용을 입력해주세요</p>
+            </div>
+            <a href="./view.html" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 backdrop-blur-sm">
+                <i class="fas fa-list-ul"></i> 전체보기
+            </a>
+        </div>
+
+        <form id="juboForm" class="p-6 md:p-8 space-y-6">
+            
+            <div class="space-y-2">
+                <label class="text-sm font-bold text-gray-600 ml-1 flex items-center gap-2">
+                    <i class="far fa-calendar-alt text-indigo-500"></i> 주보 날짜
+                </label>
+                <input type="date" id="targetDate" class="input-field w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none text-gray-700 font-medium" required>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-sm font-bold text-gray-600 ml-1 flex items-center gap-2">
+                    <i class="fas fa-tag text-indigo-500"></i> 부서 선택
+                </label>
+                <div class="relative">
+                    <select id="department" class="input-field w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none text-gray-700 font-medium appearance-none" onchange="updateFormFields()">
+                        <option value="">담당 부서를 선택해주세요</option>
+                        
+                        <optgroup label="🎵 찬양 및 예배">
+                            <option value="worship_1">1부 경배와찬양</option>
+                            <option value="worship_23">2-3부 경배와찬양</option>
+                            <option value="choir_all">찬양대 (통합)</option>
+                        </optgroup>
+
+                        <optgroup label="📖 설교 (제목/본문)">
+                            <option value="sermon_4">4부 예배 설교</option>
+                            <option value="sermon_5">5부 예배 설교</option>
+                            <option value="sermon_pm">오후예배 설교</option>
+                            <option value="sermon_wed_am">수요오전 설교</option>
+                            <option value="sermon_wed_pm">수요저녁 설교</option>
+                        </optgroup>
+
+                        <optgroup label="🏫 다음세대">
+                            <option value="school">교회학교 / 청년부</option>
+                        </optgroup>
+
+                        <optgroup label="📢 소식 및 기타">
+                            <option value="news">광고 / 교우소식</option>
+                            <option value="service">봉사 / 식당 / 기타</option>
+                        </optgroup>
+                    </select>
+                    <div class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-sm font-bold text-gray-600 ml-1 flex items-center gap-2">
+                    <i class="fas fa-user-edit text-indigo-500"></i> 작성자
+                </label>
+                <input type="text" id="writer" placeholder="직분 포함 (예: 김철수 전도사)" class="input-field w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none text-gray-700 font-medium" required>
+            </div>
+
+            <div id="dynamicFields" class="hidden space-y-4 bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100 animate-fade-in">
+                </div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-4 rounded-2xl shadow-lg transform hover:-translate-y-1 transition-all duration-200 flex justify-center items-center gap-2">
+                <span>제출하기</span> <i class="fas fa-paper-plane"></i>
+            </button>
         </form>
     </div>
 
     <script>
-        // ⚠️ 여기에 아까 복사한 구글 앱스 스크립트 URL을 붙여넣으세요!
+        // ⚠️ [수정필수] 구글 스크립트 배포 URL을 여기에 넣으세요!
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxAItLf7sBsBhX-VIcTWruv1ukt8XSR-qNMy_GesNUhPQQFvDkCoztFQqDVNSrXrYuu/exec'; 
 
-        const today = new Date(); const nextSun = new Date(today.setDate(today.getDate() + (7 - today.getDay()) % 7 || 7));
+        // 날짜 자동 설정 (다음주 일요일)
+        const today = new Date(); 
+        const nextSun = new Date(today.setDate(today.getDate() + (7 - today.getDay()) % 7 || 7));
         document.getElementById('targetDate').valueAsDate = nextSun;
 
+        // 부서 선택에 따른 입력창 변경 로직
         function updateFormFields() {
             const dept = document.getElementById('department').value;
             const div = document.getElementById('dynamicFields');
-            div.innerHTML = ''; div.classList.remove('hidden');
+            
+            if (!dept) {
+                div.classList.add('hidden');
+                return;
+            }
+            
+            div.innerHTML = ''; 
+            div.classList.remove('hidden');
             let html = '';
 
-            // 1. 설교 (본문 + 제목 입력칸 나옴)
+            // A. 설교 (본문 + 제목)
             if (dept.includes('sermon')) {
-                html = `<input id="field1" class="w-full p-2 border rounded mb-2" placeholder="성경 본문 (예: 요 3:16)">
-                        <input id="field2" class="w-full p-2 border rounded" placeholder="설교 제목">`;
+                html = `
+                    <div>
+                        <label class="text-xs font-bold text-indigo-500 mb-1 block">성경 본문</label>
+                        <input id="field1" class="input-field w-full p-3 bg-white border border-indigo-100 rounded-xl" placeholder="예: 요한복음 3:16">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-indigo-500 mb-1 block">설교 제목</label>
+                        <input id="field2" class="input-field w-full p-3 bg-white border border-indigo-100 rounded-xl" placeholder="제목을 입력하세요">
+                    </div>
+                `;
             }
-            // 2. 그 외 (찬양대, 광고 등은 모두 큰 입력창 하나)
-            else if (dept) {
-                let placeholder = "내용을 입력해주세요.";
+            // B. 교회학교/청년부 (부서명 입력칸 삭제! 내용만 크게!)
+            else if (dept === 'school') {
+                html = `
+                    <div>
+                        <label class="text-xs font-bold text-indigo-500 mb-1 block">소식 및 보고 내용</label>
+                        <textarea id="longText" rows="6" class="input-field w-full p-3 bg-white border border-indigo-100 rounded-xl resize-none" placeholder="이번 주 부서 소식, 모임 장소 등을 자유롭게 적어주세요."></textarea>
+                    </div>
+                `;
+            }
+            // C. 찬양 (입력창 하나)
+            else if (dept.includes('worship') || dept === 'choir_all') {
+                let placeholder = "콘티(곡명)를 입력해주세요.";
+                if (dept === 'choir_all') placeholder = "예시:\n1부: 주는 저 산 밑에\n2부: 영화롭도다\n3부: 할렐루야";
+                
+                html = `
+                    <div>
+                        <label class="text-xs font-bold text-indigo-500 mb-1 block">찬양 곡명</label>
+                        <textarea id="longText" rows="6" class="input-field w-full p-3 bg-white border border-indigo-100 rounded-xl resize-none" placeholder="${placeholder}"></textarea>
+                    </div>
+                `;
+            }
+            // D. 뉴스/봉사 (분류 + 내용)
+            else {
                 let subInput = "";
-                
-                if (dept === 'choir_all') placeholder = "예시:\n1부: 곡명\n2부: 곡명\n3부: 곡명";
-                else if (dept.includes('worship')) placeholder = "콘티(곡명)를 입력해주세요.";
-                
-                if (dept === 'news') subInput = `<select id="field1" class="w-full p-2 border rounded mb-2"><option>교회소식</option><option>기관소식</option><option>모집</option></select>`;
-                else if (!dept.includes('worship') && dept !== 'choir_all') subInput = `<input id="field1" class="w-full p-2 border rounded mb-2" placeholder="부서명/봉사명">`;
+                // 뉴스는 선택박스
+                if(dept === 'news') {
+                    subInput = `
+                        <div class="mb-3">
+                            <label class="text-xs font-bold text-indigo-500 mb-1 block">광고 분류</label>
+                            <select id="field1" class="input-field w-full p-3 bg-white border border-indigo-100 rounded-xl">
+                                <option>교회소식</option><option>기관소식</option><option>모집</option><option>교우소식</option>
+                            </select>
+                        </div>`;
+                } 
+                // 봉사는 봉사명 입력
+                else {
+                    subInput = `
+                        <div class="mb-3">
+                            <label class="text-xs font-bold text-indigo-500 mb-1 block">봉사/부서명</label>
+                            <input id="field1" class="input-field w-full p-3 bg-white border border-indigo-100 rounded-xl" placeholder="예: 식당봉사, 차량팀">
+                        </div>`;
+                }
 
-                html = `${subInput}<textarea id="longText" rows="6" class="w-full p-2 border rounded" placeholder="${placeholder}"></textarea>`;
-            } else {
-                div.classList.add('hidden');
+                html = `
+                    ${subInput}
+                    <div>
+                        <label class="text-xs font-bold text-indigo-500 mb-1 block">상세 내용</label>
+                        <textarea id="longText" rows="6" class="input-field w-full p-3 bg-white border border-indigo-100 rounded-xl resize-none" placeholder="내용을 입력해주세요."></textarea>
+                    </div>
+                `;
             }
+
             div.innerHTML = html;
         }
 
-        document.getElementById('juboForm').addEventListener('submit', e => {
+        // 폼 제출
+        document.getElementById('juboForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const btn = document.getElementById('submitBtn'); btn.innerText = '전송 중...'; btn.disabled = true;
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.innerHTML;
             
-            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 전송 중...';
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+
+            const data = {
                 targetDate: document.getElementById('targetDate').value,
                 department: document.getElementById('department').value,
                 writer: document.getElementById('writer').value,
-                field1: document.getElementById('field1')?.value || '', // 본문/분류
-                field2: document.getElementById('field2')?.value || '', // 제목
-                longText: document.getElementById('longText')?.value || '' // 긴내용
-            }), mode: 'no-cors' }).then(() => { alert('제출 완료!'); window.location.reload(); });
+                field1: document.getElementById('field1') ? document.getElementById('field1').value : '',
+                field2: document.getElementById('field2') ? document.getElementById('field2').value : '',
+                longText: document.getElementById('longText') ? document.getElementById('longText').value : ''
+            };
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                mode: 'no-cors'
+            })
+            .then(() => {
+                alert('✅ 성공적으로 제출되었습니다!');
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('전송 실패! 다시 시도해주세요.');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            });
         });
     </script>
 </body>
