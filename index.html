@@ -8,105 +8,141 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        body { font-family: 'Pretendard', sans-serif; background-color: #F2F4F6; }
         
-        /* 트렌디한 디자인 요소 */
-        .app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; background: white; box-shadow: 0 0 40px rgba(0,0,0,0.05); }
-        .input-box { transition: all 0.2s; border: 1px solid #E5E8EB; background: #F9FAFB; }
-        .input-box:focus { border-color: #3182F6; background: white; box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.1); outline: none; }
-        .btn-primary { background: #3182F6; color: white; transition: transform 0.1s; }
-        .btn-primary:active { transform: scale(0.98); }
+        /* 토스 스타일 컬러 및 폰트 정의 */
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            background-color: #F2F4F6; /* 토스 배경색 */
+            color: #191F28; /* 토스 블랙 */
+        }
         
-        /* 모달 (전체보기) 애니메이션 */
-        .modal { transition: opacity 0.3s, transform 0.3s; pointer-events: none; opacity: 0; transform: translateY(20px); }
-        .modal.active { pointer-events: all; opacity: 1; transform: translateY(0); }
-        .glass-header { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid #f0f0f0; }
+        /* 카드 디자인 */
+        .toss-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s ease;
+        }
+        
+        /* 입력창 디자인 */
+        .toss-input {
+            background-color: #F9FAFB;
+            border: 1px solid transparent;
+            border-radius: 16px;
+            transition: all 0.2s ease;
+            color: #333D4B;
+        }
+        .toss-input:focus {
+            background-color: white;
+            border-color: #3182F6; /* 토스 블루 */
+            box-shadow: 0 0 0 2px rgba(49, 130, 246, 0.1);
+            outline: none;
+        }
+        
+        /* 버튼 디자인 */
+        .toss-btn {
+            background-color: #3182F6;
+            color: white;
+            border-radius: 16px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .toss-btn:active { background-color: #1B64DA; }
+        
+        /* 모달 애니메이션 */
+        .modal-enter { opacity: 0; transform: translateY(20px); }
+        .modal-active { opacity: 1; transform: translateY(0); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     </style>
 </head>
-<body>
+<body class="antialiased min-h-screen pb-10">
 
-<div class="app-container relative">
+<div class="max-w-xl mx-auto">
     
-    <header class="glass-header sticky top-0 z-10 px-6 py-4 flex justify-between items-center">
+    <header class="sticky top-0 z-20 bg-[#F2F4F6]/90 backdrop-blur-md px-6 py-4 flex justify-between items-center mb-2">
         <div>
-            <h1 class="text-xl font-extrabold text-gray-900">⛪ 주보 작성</h1>
-            <p class="text-xs text-gray-500 mt-0.5">이번 주 주보 내용을 입력해주세요</p>
+            <h1 class="text-2xl font-bold text-[#191F28]">주보 작성</h1>
         </div>
-        <button onclick="toggleViewMode()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-bold transition flex items-center gap-2">
+        <button onclick="toggleViewMode()" class="bg-white text-[#3182F6] px-4 py-2 rounded-full text-sm font-bold shadow-sm hover:bg-gray-50 transition flex items-center gap-2">
             <i class="fas fa-list"></i> 접수 현황
         </button>
     </header>
 
-    <main class="p-6 pb-20 space-y-6">
-        <form id="juboForm" class="space-y-5">
+    <main class="px-5 space-y-6">
+        <form id="juboForm" class="space-y-6">
             
-            <div>
-                <label class="block text-sm font-bold text-gray-600 mb-2">📅 주보 날짜</label>
-                <input type="date" id="targetDate" class="input-box w-full p-4 rounded-xl text-lg font-medium text-gray-800" required>
-            </div>
+            <div class="toss-card p-6 space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-[#8B95A1] mb-2 pl-1">날짜</label>
+                    <input type="date" id="targetDate" class="toss-input w-full p-4 text-lg font-bold" required>
+                </div>
 
-            <div>
-                <label class="block text-sm font-bold text-gray-600 mb-2">🏷️ 부서 선택</label>
-                <div class="relative">
-                    <select id="department" class="input-box w-full p-4 rounded-xl text-gray-800 appearance-none font-medium" onchange="updateFormFields()" required>
-                        <option value="">부서를 선택해주세요</option>
-                        
-                        <optgroup label="🌱 다음세대 (입력 간소화)">
-                            <option value="youth">청년부</option>
-                            <option value="school">교회학교</option>
-                        </optgroup>
+                <div>
+                    <label class="block text-sm font-bold text-[#8B95A1] mb-2 pl-1">부서</label>
+                    <div class="relative">
+                        <select id="department" class="toss-input w-full p-4 text-lg appearance-none font-bold" onchange="updateFormFields()" required>
+                            <option value="">어디 부서인가요?</option>
+                            
+                            <optgroup label="🎵 찬양 및 예배">
+                                <option value="worship_1">1부 경배와찬양</option>
+                                <option value="worship_23">2-3부 경배와찬양</option>
+                                <option value="choir_all">찬양대 (전체)</option>
+                            </optgroup>
 
-                        <optgroup label="🎵 찬양 및 예배">
-                            <option value="worship_1">1부 경배와찬양</option>
-                            <option value="worship_23">2-3부 경배와찬양</option>
-                            <option value="choir_all">찬양대 (전체)</option>
-                        </optgroup>
+                            <optgroup label="📖 설교">
+                                <option value="sermon_4">4부 예배 설교</option>
+                                <option value="sermon_5">5부 예배 설교</option>
+                                <option value="sermon_pm">오후예배 설교</option>
+                                <option value="sermon_wed_am">수요오전 설교</option>
+                                <option value="sermon_wed_pm">수요저녁 설교</option>
+                            </optgroup>
 
-                        <optgroup label="📖 설교">
-                            <option value="sermon_4">4부 예배 설교</option>
-                            <option value="sermon_5">5부 예배 설교</option>
-                            <option value="sermon_pm">오후예배 설교</option>
-                            <option value="sermon_wed_am">수요오전 설교</option>
-                            <option value="sermon_wed_pm">수요저녁 설교</option>
-                        </optgroup>
+                            <optgroup label="🌱 다음세대 (입력 간소화)">
+                                <option value="youth">청년부</option>
+                                <option value="school">교회학교</option>
+                            </optgroup>
 
-                        <optgroup label="📢 기타">
-                            <option value="news">광고 / 소식</option>
-                            <option value="service">봉사 / 기타</option>
-                        </optgroup>
-                    </select>
-                    <div class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400">
-                        <i class="fas fa-chevron-down"></i>
+                            <optgroup label="📢 기타">
+                                <option value="news">광고 / 소식</option>
+                                <option value="service">봉사 / 기타</option>
+                            </optgroup>
+                        </select>
+                        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
                     </div>
                 </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-[#8B95A1] mb-2 pl-1">작성자</label>
+                    <input type="text" id="writer" placeholder="예: 김철수 전도사" class="toss-input w-full p-4 font-medium" required>
+                </div>
             </div>
 
-            <div>
-                <label class="block text-sm font-bold text-gray-600 mb-2">✍️ 작성자</label>
-                <input type="text" id="writer" placeholder="예: 김철수 전도사" class="input-box w-full p-4 rounded-xl" required>
-            </div>
-
-            <div id="dynamicFields" class="hidden bg-blue-50 p-5 rounded-2xl border border-blue-100 space-y-3 animate-fade">
+            <div id="dynamicFields" class="hidden toss-card p-6 space-y-4 animate-fade">
                 </div>
 
-            <button type="submit" id="submitBtn" class="btn-primary w-full py-4 rounded-xl text-lg font-bold shadow-lg shadow-blue-500/30 flex justify-center items-center gap-2">
-                <span>제출하기</span> <i class="fas fa-paper-plane"></i>
+            <button type="submit" id="submitBtn" class="toss-btn w-full py-4 text-lg shadow-lg shadow-blue-500/20 transform active:scale-95 transition-transform">
+                보내기
             </button>
         </form>
     </main>
 
-    <div id="viewModal" class="modal fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="toggleViewMode()"></div>
+    <div id="viewModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none">
+        <div id="modalBackdrop" class="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="toggleViewMode()"></div>
         
-        <div class="relative bg-white w-full max-w-lg h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden">
-            <div class="p-5 border-b flex justify-between items-center bg-white sticky top-0 z-10">
-                <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-clipboard-list text-blue-500"></i> 접수 현황</h2>
-                <button onclick="toggleViewMode()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200"><i class="fas fa-times"></i></button>
+        <div id="modalContent" class="modal-enter relative bg-[#F2F4F6] w-full max-w-lg h-[90vh] sm:h-[80vh] rounded-t-[28px] sm:rounded-[28px] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
+            
+            <div class="bg-white p-5 flex justify-between items-center border-b border-gray-100 rounded-t-[28px]">
+                <h2 class="text-xl font-bold text-[#191F28] pl-2">접수 현황</h2>
+                <button onclick="toggleViewMode()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             
-            <div id="viewContent" class="flex-1 overflow-y-auto p-5 space-y-4 bg-gray-50">
-                <div class="text-center py-10 text-gray-400">
-                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>데이터 불러오는 중...
+            <div id="viewContent" class="flex-1 overflow-y-auto p-5 space-y-4">
+                <div class="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
+                    <i class="fas fa-spinner fa-spin text-2xl text-[#3182F6]"></i>
+                    <p class="font-medium">불러오는 중...</p>
                 </div>
             </div>
         </div>
@@ -123,7 +159,7 @@
     const nextSun = new Date(today.setDate(today.getDate() + (7 - today.getDay()) % 7 || 7));
     document.getElementById('targetDate').valueAsDate = nextSun;
 
-    // 1. 입력창 변경 로직 (청년부/교회학교 요구사항 반영!)
+    // 1. 입력창 변경 로직
     function updateFormFields() {
         const dept = document.getElementById('department').value;
         const div = document.getElementById('dynamicFields');
@@ -134,36 +170,41 @@
 
         let html = '';
 
-        // Case A: 교회학교 OR 청년부 (부서명 입력칸 삭제됨! 내용만 크게!)
+        // Case A: 교회학교 OR 청년부 (요청하신 대로 탭 분리 + 입력 간소화)
         if (dept === 'school' || dept === 'youth') {
             const label = dept === 'youth' ? '청년부' : '교회학교';
             html = `
                 <div>
-                    <label class="text-xs font-bold text-blue-600 mb-1 block">📢 ${label} 소식 및 보고</label>
-                    <textarea id="longText" rows="6" class="input-box w-full p-3 rounded-xl resize-none" placeholder="광고 내용, 모임 장소, 보고 사항 등을 자유롭게 적어주세요."></textarea>
+                    <h3 class="text-lg font-bold text-[#3182F6] mb-1">${label} 소식</h3>
+                    <p class="text-sm text-gray-400 mb-3">부서명 입력 없이 내용만 적으시면 됩니다.</p>
+                    <textarea id="longText" rows="6" class="toss-input w-full p-4 resize-none" placeholder="광고 내용, 모임 장소, 보고 사항 등을 자유롭게 적어주세요."></textarea>
                 </div>
             `;
         }
         // Case B: 설교
         else if (dept.includes('sermon')) {
             html = `
-                <input id="field1" class="input-box w-full p-3 rounded-xl mb-3" placeholder="성경 본문 (예: 요 3:16)">
-                <input id="field2" class="input-box w-full p-3 rounded-xl" placeholder="설교 제목">
+                <h3 class="text-lg font-bold text-[#191F28] mb-3">설교 정보</h3>
+                <input id="field1" class="toss-input w-full p-4 mb-3" placeholder="성경 본문 (예: 요 3:16)">
+                <input id="field2" class="toss-input w-full p-4" placeholder="설교 제목">
             `;
         }
         // Case C: 찬양
         else if (dept.includes('worship') || dept === 'choir_all') {
             let ph = "곡명을 입력해주세요.";
             if (dept === 'choir_all') ph = "예시:\n1부: 곡명\n2부: 곡명\n3부: 곡명";
-            html = `<textarea id="longText" rows="6" class="input-box w-full p-3 rounded-xl resize-none" placeholder="${ph}"></textarea>`;
+            html = `
+                <h3 class="text-lg font-bold text-[#191F28] mb-3">찬양 콘티</h3>
+                <textarea id="longText" rows="6" class="toss-input w-full p-4 resize-none" placeholder="${ph}"></textarea>
+            `;
         }
         // Case D: 뉴스/봉사
         else {
             let sub = dept === 'news' 
-                ? `<select id="field1" class="input-box w-full p-3 rounded-xl mb-3"><option>교회소식</option><option>기관소식</option><option>모집</option></select>` 
-                : `<input id="field1" class="input-box w-full p-3 rounded-xl mb-3" placeholder="봉사/부서명">`;
+                ? `<select id="field1" class="toss-input w-full p-4 mb-3"><option>교회소식</option><option>기관소식</option><option>모집</option></select>` 
+                : `<input id="field1" class="toss-input w-full p-4 mb-3" placeholder="봉사/부서명">`;
             
-            html = `${sub}<textarea id="longText" rows="5" class="input-box w-full p-3 rounded-xl resize-none" placeholder="내용 입력"></textarea>`;
+            html = `${sub}<textarea id="longText" rows="5" class="toss-input w-full p-4 resize-none" placeholder="내용 입력"></textarea>`;
         }
         div.innerHTML = html;
     }
@@ -172,8 +213,8 @@
     document.getElementById('juboForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
-        const originalBtn = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 전송 중...'; btn.disabled = true;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '전송 중...'; btn.disabled = true;
 
         fetch(SCRIPT_URL, {
             method: 'POST',
@@ -193,14 +234,22 @@
 
     // 3. 전체보기(모달) 로직
     function toggleViewMode() {
-        const modal = document.getElementById('viewModal');
-        const isOpen = modal.classList.contains('active');
+        const backdrop = document.getElementById('modalBackdrop');
+        const content = document.getElementById('modalContent');
+        const container = document.getElementById('viewModal');
+        const isOpen = content.classList.contains('modal-active');
         
         if (!isOpen) {
-            modal.classList.add('active');
-            fetchData(); // 열 때 데이터 가져옴
+            // 열기
+            container.style.pointerEvents = "auto";
+            backdrop.style.opacity = "1";
+            content.classList.add('modal-active');
+            fetchData(); // 데이터 로드
         } else {
-            modal.classList.remove('active');
+            // 닫기
+            backdrop.style.opacity = "0";
+            content.classList.remove('modal-active');
+            setTimeout(() => { container.style.pointerEvents = "none"; }, 300);
         }
     }
 
@@ -216,30 +265,28 @@
             container.innerHTML = '';
             
             if (!filtered.length) {
-                container.innerHTML = `<div class="text-center py-10 text-gray-400"><i class="far fa-folder-open text-3xl mb-2"></i><p>접수된 내용이 없습니다.</p></div>`;
+                container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-gray-400 gap-3"><i class="far fa-folder-open text-4xl mb-2"></i><p>접수된 내용이 없습니다.</p></div>`;
                 return;
             }
 
             filtered.forEach(item => {
-                // 복사 내용 포맷
                 let copyText = "";
                 if(item.department.includes('설교')) copyText = `[${item.department}]\n제목: ${item.field2}\n본문: ${item.field1}`;
                 else copyText = `${item.department}\n${item.field1 ? item.field1+' ' : ''}${item.longText}`.trim();
 
-                // 카드 HTML
                 container.innerHTML += `
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="font-bold text-gray-800 text-lg">${item.department}</span>
-                            <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-lg">${item.writer}</span>
+                    <div class="bg-white p-5 rounded-[20px] shadow-sm mb-4">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="font-bold text-[#191F28] text-lg">${item.department}</span>
+                            <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-md font-medium">${item.writer}</span>
                         </div>
-                        <div class="text-gray-600 text-sm space-y-1 mb-4">
-                            ${item.field1 ? `<p class="font-medium text-blue-600">${item.field1}</p>` : ''}
-                            ${item.field2 ? `<p class="font-bold text-gray-800">${item.field2}</p>` : ''}
-                            ${item.longText ? `<p class="whitespace-pre-wrap bg-gray-50 p-3 rounded-lg">${item.longText}</p>` : ''}
+                        <div class="text-[#4E5968] text-sm space-y-2 mb-4">
+                            ${item.field1 ? `<p class="font-semibold text-[#3182F6]">${item.field1}</p>` : ''}
+                            ${item.field2 ? `<p class="font-bold text-black text-base">${item.field2}</p>` : ''}
+                            ${item.longText ? `<p class="whitespace-pre-wrap bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">${item.longText}</p>` : ''}
                         </div>
-                        <button onclick="navigator.clipboard.writeText(\`${copyText.replace(/`/g, '')}\`).then(()=>alert('복사되었습니다!'))" class="w-full py-3 bg-gray-50 hover:bg-blue-50 text-gray-600 hover:text-blue-600 font-bold rounded-xl text-sm transition">
-                            <i class="far fa-copy"></i> 내용 복사
+                        <button onclick="navigator.clipboard.writeText(\`${copyText.replace(/`/g, '')}\`).then(()=>alert('복사되었습니다!'))" class="w-full py-3 bg-[#F2F4F6] text-[#4E5968] font-bold rounded-xl text-sm hover:bg-[#E5E8EB] transition">
+                            복사하기
                         </button>
                     </div>`;
             });
