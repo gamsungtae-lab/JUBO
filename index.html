@@ -9,32 +9,34 @@
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         
-        /* 토스 스타일 컬러 및 폰트 정의 */
         body { 
             font-family: 'Pretendard', sans-serif; 
-            background-color: #F2F4F6; /* 토스 배경색 */
-            color: #191F28; /* 토스 블랙 */
+            background-color: #F2F4F6; 
+            color: #191F28;
+            -webkit-tap-highlight-color: transparent; /* 모바일 터치 하이라이트 제거 */
         }
         
-        /* 카드 디자인 */
+        /* 토스 스타일 카드 */
         .toss-card {
             background: white;
             border-radius: 24px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-            transition: transform 0.2s ease;
         }
         
-        /* 입력창 디자인 */
+        /* 입력창 디자인 (터치 영역 확대) */
         .toss-input {
             background-color: #F9FAFB;
             border: 1px solid transparent;
             border-radius: 16px;
             transition: all 0.2s ease;
             color: #333D4B;
+            appearance: none; /* 기본 스타일 제거 */
+            -webkit-appearance: none;
+            cursor: pointer;
         }
         .toss-input:focus {
             background-color: white;
-            border-color: #3182F6; /* 토스 블루 */
+            border-color: #3182F6;
             box-shadow: 0 0 0 2px rgba(49, 130, 246, 0.1);
             outline: none;
         }
@@ -45,41 +47,51 @@
             color: white;
             border-radius: 16px;
             font-weight: 600;
-            transition: background-color 0.2s;
         }
-        .toss-btn:active { background-color: #1B64DA; }
-        
-        /* 모달 애니메이션 */
-        .modal-enter { opacity: 0; transform: translateY(20px); }
-        .modal-active { opacity: 1; transform: translateY(0); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .toss-btn:active { background-color: #1B64DA; transform: scale(0.98); }
+
+        /* 셀렉트 박스 화살표 커스텀 */
+        .select-wrapper { position: relative; }
+        .select-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none; /* 아이콘이 클릭 막지 않도록 설정 */
+            color: #8B95A1;
+        }
+
+        /* 전체보기 창 애니메이션 */
+        .modal-bg { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     </style>
 </head>
-<body class="antialiased min-h-screen pb-10">
+<body class="min-h-screen pb-10">
 
-<div class="max-w-xl mx-auto">
+<div class="max-w-xl mx-auto relative">
     
-    <header class="sticky top-0 z-20 bg-[#F2F4F6]/90 backdrop-blur-md px-6 py-4 flex justify-between items-center mb-2">
-        <div>
-            <h1 class="text-2xl font-bold text-[#191F28]">주보 작성</h1>
-        </div>
-        <button onclick="toggleViewMode()" class="bg-white text-[#3182F6] px-4 py-2 rounded-full text-sm font-bold shadow-sm hover:bg-gray-50 transition flex items-center gap-2">
+    <header class="sticky top-0 z-10 bg-[#F2F4F6]/90 backdrop-blur-md px-6 py-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-[#191F28]">주보 작성</h1>
+        <button onclick="openModal()" class="bg-white text-[#3182F6] px-4 py-2 rounded-full text-sm font-bold shadow-sm hover:bg-gray-50 border border-transparent active:scale-95 transition-transform flex items-center gap-2">
             <i class="fas fa-list"></i> 접수 현황
         </button>
     </header>
 
-    <main class="px-5 space-y-6">
+    <main class="px-5 space-y-6 mt-2 relative z-0">
         <form id="juboForm" class="space-y-6">
             
-            <div class="toss-card p-6 space-y-5">
+            <div class="toss-card p-6 space-y-6">
                 <div>
                     <label class="block text-sm font-bold text-[#8B95A1] mb-2 pl-1">날짜</label>
-                    <input type="date" id="targetDate" class="toss-input w-full p-4 text-lg font-bold" required>
+                    <div class="select-wrapper">
+                        <input type="date" id="targetDate" class="toss-input w-full p-4 text-lg font-bold" required>
+                    </div>
                 </div>
 
                 <div>
                     <label class="block text-sm font-bold text-[#8B95A1] mb-2 pl-1">부서</label>
-                    <div class="relative">
-                        <select id="department" class="toss-input w-full p-4 text-lg appearance-none font-bold" onchange="updateFormFields()" required>
+                    <div class="select-wrapper">
+                        <select id="department" class="toss-input w-full p-4 text-lg font-bold pr-10" onchange="updateFormFields()" required>
                             <option value="">어디 부서인가요?</option>
                             
                             <optgroup label="🎵 찬양 및 예배">
@@ -96,7 +108,7 @@
                                 <option value="sermon_wed_pm">수요저녁 설교</option>
                             </optgroup>
 
-                            <optgroup label="🌱 다음세대 (입력 간소화)">
+                            <optgroup label="🌱 다음세대">
                                 <option value="youth">청년부</option>
                                 <option value="school">교회학교</option>
                             </optgroup>
@@ -106,9 +118,7 @@
                                 <option value="service">봉사 / 기타</option>
                             </optgroup>
                         </select>
-                        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400">
-                            <i class="fas fa-chevron-down"></i>
-                        </div>
+                        <div class="select-icon"><i class="fas fa-chevron-down"></i></div>
                     </div>
                 </div>
 
@@ -118,23 +128,23 @@
                 </div>
             </div>
 
-            <div id="dynamicFields" class="hidden toss-card p-6 space-y-4 animate-fade">
+            <div id="dynamicFields" class="hidden toss-card p-6 space-y-4">
                 </div>
 
-            <button type="submit" id="submitBtn" class="toss-btn w-full py-4 text-lg shadow-lg shadow-blue-500/20 transform active:scale-95 transition-transform">
+            <button type="submit" id="submitBtn" class="toss-btn w-full py-4 text-lg shadow-lg shadow-blue-500/20">
                 보내기
             </button>
         </form>
     </main>
 
-    <div id="viewModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none">
-        <div id="modalBackdrop" class="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 transition-opacity duration-300" onclick="toggleViewMode()"></div>
+    <div id="viewModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div id="modalBackdrop" class="absolute inset-0 bg-black/40 opacity-0 modal-bg" onclick="closeModal()"></div>
         
-        <div id="modalContent" class="modal-enter relative bg-[#F2F4F6] w-full max-w-lg h-[90vh] sm:h-[80vh] rounded-t-[28px] sm:rounded-[28px] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
+        <div id="modalContent" class="relative bg-[#F2F4F6] w-full max-w-lg h-[90vh] sm:h-[80vh] rounded-t-[28px] sm:rounded-[28px] shadow-2xl flex flex-col overflow-hidden transform translate-y-full modal-content">
             
             <div class="bg-white p-5 flex justify-between items-center border-b border-gray-100 rounded-t-[28px]">
                 <h2 class="text-xl font-bold text-[#191F28] pl-2">접수 현황</h2>
-                <button onclick="toggleViewMode()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200">
+                <button onclick="closeModal()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -142,7 +152,7 @@
             <div id="viewContent" class="flex-1 overflow-y-auto p-5 space-y-4">
                 <div class="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
                     <i class="fas fa-spinner fa-spin text-2xl text-[#3182F6]"></i>
-                    <p class="font-medium">불러오는 중...</p>
+                    <p class="font-medium">데이터를 불러오고 있습니다...</p>
                 </div>
             </div>
         </div>
@@ -151,7 +161,7 @@
 </div>
 
 <script>
-    // 🔴 [필수] 여기에 본인의 구글 스크립트 URL을 넣으세요!
+    // 🔴 [필수] 구글 스크립트 URL 다시 확인해서 넣어주세요!
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxAItLf7sBsBhX-VIcTWruv1ukt8XSR-qNMy_GesNUhPQQFvDkCoztFQqDVNSrXrYuu/exec'; 
 
     // 날짜 자동 설정
@@ -159,7 +169,7 @@
     const nextSun = new Date(today.setDate(today.getDate() + (7 - today.getDay()) % 7 || 7));
     document.getElementById('targetDate').valueAsDate = nextSun;
 
-    // 1. 입력창 변경 로직
+    // 1. 입력창 로직 (청년/교회학교 입력 간소화 적용됨)
     function updateFormFields() {
         const dept = document.getElementById('department').value;
         const div = document.getElementById('dynamicFields');
@@ -170,50 +180,41 @@
 
         let html = '';
 
-        // Case A: 교회학교 OR 청년부 (요청하신 대로 탭 분리 + 입력 간소화)
         if (dept === 'school' || dept === 'youth') {
             const label = dept === 'youth' ? '청년부' : '교회학교';
             html = `
                 <div>
                     <h3 class="text-lg font-bold text-[#3182F6] mb-1">${label} 소식</h3>
-                    <p class="text-sm text-gray-400 mb-3">부서명 입력 없이 내용만 적으시면 됩니다.</p>
-                    <textarea id="longText" rows="6" class="toss-input w-full p-4 resize-none" placeholder="광고 내용, 모임 장소, 보고 사항 등을 자유롭게 적어주세요."></textarea>
-                </div>
-            `;
+                    <p class="text-xs text-gray-400 mb-3">부서명 없이 내용만 적으세요</p>
+                    <textarea id="longText" rows="6" class="toss-input w-full p-4 resize-none" placeholder="광고 내용, 모임 장소 등을 적어주세요."></textarea>
+                </div>`;
         }
-        // Case B: 설교
         else if (dept.includes('sermon')) {
             html = `
                 <h3 class="text-lg font-bold text-[#191F28] mb-3">설교 정보</h3>
                 <input id="field1" class="toss-input w-full p-4 mb-3" placeholder="성경 본문 (예: 요 3:16)">
-                <input id="field2" class="toss-input w-full p-4" placeholder="설교 제목">
-            `;
+                <input id="field2" class="toss-input w-full p-4" placeholder="설교 제목">`;
         }
-        // Case C: 찬양
         else if (dept.includes('worship') || dept === 'choir_all') {
             let ph = "곡명을 입력해주세요.";
             if (dept === 'choir_all') ph = "예시:\n1부: 곡명\n2부: 곡명\n3부: 곡명";
             html = `
                 <h3 class="text-lg font-bold text-[#191F28] mb-3">찬양 콘티</h3>
-                <textarea id="longText" rows="6" class="toss-input w-full p-4 resize-none" placeholder="${ph}"></textarea>
-            `;
+                <textarea id="longText" rows="6" class="toss-input w-full p-4 resize-none" placeholder="${ph}"></textarea>`;
         }
-        // Case D: 뉴스/봉사
         else {
             let sub = dept === 'news' 
                 ? `<select id="field1" class="toss-input w-full p-4 mb-3"><option>교회소식</option><option>기관소식</option><option>모집</option></select>` 
                 : `<input id="field1" class="toss-input w-full p-4 mb-3" placeholder="봉사/부서명">`;
-            
             html = `${sub}<textarea id="longText" rows="5" class="toss-input w-full p-4 resize-none" placeholder="내용 입력"></textarea>`;
         }
         div.innerHTML = html;
     }
 
-    // 2. 폼 제출 로직
+    // 2. 제출 로직
     document.getElementById('juboForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
-        const originalText = btn.innerHTML;
         btn.innerHTML = '전송 중...'; btn.disabled = true;
 
         fetch(SCRIPT_URL, {
@@ -232,28 +233,37 @@
         });
     });
 
-    // 3. 전체보기(모달) 로직
-    function toggleViewMode() {
+    // 3. 모달 열기/닫기 로직 (간섭 문제 완벽 해결)
+    function openModal() {
+        const modal = document.getElementById('viewModal');
         const backdrop = document.getElementById('modalBackdrop');
         const content = document.getElementById('modalContent');
-        const container = document.getElementById('viewModal');
-        const isOpen = content.classList.contains('modal-active');
         
-        if (!isOpen) {
-            // 열기
-            container.style.pointerEvents = "auto";
-            backdrop.style.opacity = "1";
-            content.classList.add('modal-active');
-            fetchData(); // 데이터 로드
-        } else {
-            // 닫기
-            backdrop.style.opacity = "0";
-            content.classList.remove('modal-active');
-            setTimeout(() => { container.style.pointerEvents = "none"; }, 300);
-        }
+        modal.classList.remove('hidden'); // display:block으로 변경
+        // 애니메이션을 위해 약간의 딜레이 후 클래스 추가
+        setTimeout(() => {
+            backdrop.classList.remove('opacity-0');
+            content.classList.remove('translate-y-full');
+        }, 10);
+        
+        fetchData();
     }
 
-    // 데이터 가져와서 카드 그리기
+    function closeModal() {
+        const modal = document.getElementById('viewModal');
+        const backdrop = document.getElementById('modalBackdrop');
+        const content = document.getElementById('modalContent');
+        
+        backdrop.classList.add('opacity-0');
+        content.classList.add('translate-y-full');
+        
+        // 애니메이션 끝난 후 숨김 처리
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    // 데이터 불러오기
     function fetchData() {
         const container = document.getElementById('viewContent');
         const date = document.getElementById('targetDate').value;
