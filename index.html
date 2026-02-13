@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주보 입력 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css'); body { font-family: 'Pretendard', sans-serif; }</style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-lg bg-white rounded-xl shadow-lg p-6">
+        <h1 class="text-2xl font-bold text-center text-indigo-700 mb-6">⛪ 주보 내용 입력</h1>
+        <form id="juboForm" class="space-y-4">
+            <div><label class="block text-sm font-bold text-gray-700">📅 주보 날짜</label><input type="date" id="targetDate" class="w-full p-3 border rounded-lg" required></div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700">🏷️ 부서 선택</label>
+                <select id="department" class="w-full p-3 border rounded-lg" onchange="updateFormFields()">
+                    <option value="">선택하세요</option>
+                    <optgroup label="찬양">
+                        <option value="worship_1">1부 경배와찬양</option>
+                        <option value="worship_23">2-3부 경배와찬양</option>
+                        <option value="choir_all">찬양대 (전체 통합)</option>
+                    </optgroup>
+                    <optgroup label="설교 (제목/본문)">
+                        <option value="sermon_4">4부 설교</option>
+                        <option value="sermon_5">5부 설교</option>
+                        <option value="sermon_pm">오후예배 설교</option>
+                        <option value="sermon_wed_am">수요오전 설교</option>
+                        <option value="sermon_wed_pm">수요저녁 설교</option>
+                    </optgroup>
+                    <optgroup label="기타">
+                        <option value="school">교회학교/청년부</option>
+                        <option value="news">광고/소식</option>
+                        <option value="service">봉사/기타</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div><label class="block text-sm font-bold text-gray-700">✍️ 작성자</label><input type="text" id="writer" class="w-full p-3 border rounded-lg" placeholder="직분 포함" required></div>
+            
+            <div id="dynamicFields" class="hidden space-y-3 bg-gray-50 p-4 rounded-lg border"></div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-lg hover:bg-indigo-700">제출하기</button>
+        </form>
+    </div>
+
+    <script>
+        // ⚠️ 여기에 아까 복사한 구글 앱스 스크립트 URL을 붙여넣으세요!
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxAItLf7sBsBhX-VIcTWruv1ukt8XSR-qNMy_GesNUhPQQFvDkCoztFQqDVNSrXrYuu/exec'; 
+
+        const today = new Date(); const nextSun = new Date(today.setDate(today.getDate() + (7 - today.getDay()) % 7 || 7));
+        document.getElementById('targetDate').valueAsDate = nextSun;
+
+        function updateFormFields() {
+            const dept = document.getElementById('department').value;
+            const div = document.getElementById('dynamicFields');
+            div.innerHTML = ''; div.classList.remove('hidden');
+            let html = '';
+
+            // 1. 설교 (본문 + 제목 입력칸 나옴)
+            if (dept.includes('sermon')) {
+                html = `<input id="field1" class="w-full p-2 border rounded mb-2" placeholder="성경 본문 (예: 요 3:16)">
+                        <input id="field2" class="w-full p-2 border rounded" placeholder="설교 제목">`;
+            }
+            // 2. 그 외 (찬양대, 광고 등은 모두 큰 입력창 하나)
+            else if (dept) {
+                let placeholder = "내용을 입력해주세요.";
+                let subInput = "";
+                
+                if (dept === 'choir_all') placeholder = "예시:\n1부: 곡명\n2부: 곡명\n3부: 곡명";
+                else if (dept.includes('worship')) placeholder = "콘티(곡명)를 입력해주세요.";
+                
+                if (dept === 'news') subInput = `<select id="field1" class="w-full p-2 border rounded mb-2"><option>교회소식</option><option>기관소식</option><option>모집</option></select>`;
+                else if (!dept.includes('worship') && dept !== 'choir_all') subInput = `<input id="field1" class="w-full p-2 border rounded mb-2" placeholder="부서명/봉사명">`;
+
+                html = `${subInput}<textarea id="longText" rows="6" class="w-full p-2 border rounded" placeholder="${placeholder}"></textarea>`;
+            } else {
+                div.classList.add('hidden');
+            }
+            div.innerHTML = html;
+        }
+
+        document.getElementById('juboForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn'); btn.innerText = '전송 중...'; btn.disabled = true;
+            
+            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({
+                targetDate: document.getElementById('targetDate').value,
+                department: document.getElementById('department').value,
+                writer: document.getElementById('writer').value,
+                field1: document.getElementById('field1')?.value || '', // 본문/분류
+                field2: document.getElementById('field2')?.value || '', // 제목
+                longText: document.getElementById('longText')?.value || '' // 긴내용
+            }), mode: 'no-cors' }).then(() => { alert('제출 완료!'); window.location.reload(); });
+        });
+    </script>
+</body>
+</html>

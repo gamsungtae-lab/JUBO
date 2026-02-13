@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주보 종합 상황판</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css'); body { font-family: 'Pretendard', sans-serif; }</style>
+</head>
+<body class="bg-slate-100 p-6">
+    <div class="max-w-5xl mx-auto">
+        <header class="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow">
+            <h1 class="text-xl font-bold">📋 주보 접수 현황</h1>
+            <input type="date" id="filterDate" class="p-2 border rounded font-bold text-slate-700">
+        </header>
+        <div id="content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+    <script>
+        // ⚠️ 여기에 아까 복사한 구글 앱스 스크립트 URL을 붙여넣으세요!
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxAItLf7sBsBhX-VIcTWruv1ukt8XSR-qNMy_GesNUhPQQFvDkCoztFQqDVNSrXrYuu/exec'; 
+
+        const today = new Date(); const nextSun = new Date(today.setDate(today.getDate() + (7 - today.getDay()) % 7 || 7));
+        document.getElementById('filterDate').value = nextSun.toISOString().split('T')[0];
+        
+        fetch(SCRIPT_URL).then(res => res.json()).then(data => {
+            const render = () => {
+                const date = document.getElementById('filterDate').value;
+                const filtered = data.filter(i => i.date.startsWith(date));
+                const div = document.getElementById('content'); div.innerHTML = '';
+                
+                if(!filtered.length) div.innerHTML = '<p class="col-span-3 text-center text-gray-400 py-10">데이터가 없습니다.</p>';
+                
+                filtered.forEach(item => {
+                    // 복사될 텍스트 형식 만들기
+                    let copyText = "";
+                    if (item.department.includes('설교')) {
+                        copyText = `[${item.department}]\n제목: ${item.field2}\n본문: ${item.field1}`;
+                    } else {
+                        // 찬양대, 광고 등은 내용 합치기
+                        copyText = `${item.department}\n${item.field1 ? item.field1 + ' ' : ''}${item.longText}`.trim();
+                    }
+
+                    div.innerHTML += `
+                        <div class="bg-white p-5 rounded-xl shadow border-l-4 ${item.department.includes('설교')?'border-blue-500':item.department.includes('찬양')?'border-green-500':'border-orange-500'}">
+                            <div class="flex justify-between font-bold mb-2"><span>${item.department}</span><span class="text-xs text-gray-400 font-normal">${item.writer}</span></div>
+                            <div class="text-sm text-gray-700 space-y-1 mb-4">
+                                ${item.field1 ? `<p class="font-semibold text-indigo-600">📌 ${item.field1}</p>` : ''} 
+                                ${item.field2 ? `<p class="font-bold text-lg">📢 ${item.field2}</p>` : ''}
+                                ${item.longText ? `<p class="whitespace-pre-wrap bg-gray-50 p-2 rounded mt-2">${item.longText}</p>` : ''}
+                            </div>
+                            <button onclick="navigator.clipboard.writeText(\`${copyText.replace(/`/g, '')}\`).then(()=>alert('복사됨!'))" class="w-full py-2 bg-gray-100 hover:bg-indigo-100 text-indigo-700 font-bold rounded text-sm">복사하기</button>
+                        </div>`;
+                });
+            };
+            render();
+            document.getElementById('filterDate').addEventListener('change', render);
+        });
+    </script>
+</body>
+</html>
